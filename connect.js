@@ -102,7 +102,7 @@ const code = await sock.requestPairingCode(cleanNumber);
             }
 
             rl.close();
-        });
+        
     }
 
 }

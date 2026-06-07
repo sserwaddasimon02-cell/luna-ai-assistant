@@ -1,5 +1,6 @@
 const makeWASocket = require("@whiskeysockets/baileys").default;
 const { useMultiFileAuthState, DisconnectReason } = require("@whiskeysockets/baileys");
+const { askAI } = require("./ai");
 const readline = require("readline");
 
 async function startBot() {
@@ -9,7 +10,7 @@ async function startBot() {
     const sock = makeWASocket({
         auth: state,
         printQRInTerminal: false,
-        browser: ["Luna", "Chrome", "9.0"],
+      browser: ["Windows", "Chrome", "120.0.0"],
         connectTimeoutMs: 60000,
         keepAliveIntervalMs: 20000,
         markOnlineOnConnect: true
@@ -17,6 +18,35 @@ async function startBot() {
 
     // Save session safely
     sock.ev.on("creds.update", saveCreds);
+sock.ev.on("messages.upsert", async ({ messages }) => {
+
+const msg = messages[0];
+
+if (!msg.message) return;
+
+const from = msg.key.remoteJid;
+
+const text =
+    msg.message.conversation ||
+    msg.message.extendedTextMessage?.text;
+
+if (!text) return;
+
+try {
+
+    const reply = await askAI(text);
+
+    await sock.sendMessage(from, {
+        text: reply
+    });
+
+} catch (err) {
+
+    console.log("AI Error:", err);
+
+}
+
+});
 
     // CONNECTION HANDLER (VERY IMPORTANT FIX)
     sock.ev.on("connection.update", async (update) => {
@@ -36,7 +66,7 @@ async function startBot() {
             // SAFE RECONNECT LOGIC (prevents loops)
             if (reason !== DisconnectReason.loggedOut) {
                 console.log("🔁 Reconnecting in 5 seconds...");
-                setTimeout(startBot, 5000);
+               // setTimeout(startBot, 5000);
             } else {
                 console.log("⚠️ Logged out. Delete auth_info and re-pair.");
             }
@@ -50,12 +80,16 @@ async function startBot() {
             output: process.stdout
         });
 
-        rl.question("Enter WhatsApp number (2567XXXXXXX): ", async (number) => {
+      const number = process.env.PHONE_NUMBER;
 
             try {
                 console.log("\n⏳ Requesting pairing code...\n");
 
-                const code = await sock.requestPairingCode(number.trim());
+                const cleanNumber = number.replace(/[^0-9]/g, "");
+
+console.log("Using number:", cleanNumber);
+
+const code = await sock.requestPairingCode(cleanNumber);
 
                 console.log("\n📌 PAIRING CODE:");
                 console.log("====================");

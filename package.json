@@ -11,7 +11,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@whiskeysockets/baileys": "^7.0.0-rc13",
+    "@google/genai": "^2.8.0",
+    "@whiskeysockets/baileys": "^7.0.0-rc12",
+    "dotenv": "^17.4.2",
     "qrcode-terminal": "^0.12.0"
   }
 }
